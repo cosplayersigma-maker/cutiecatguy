@@ -1,18 +1,10 @@
+----------------------------------------------------------------
+-- FLUENT
+----------------------------------------------------------------
+
 local Fluent = loadstring(game:HttpGet(
 "https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"
 ))()
-
-local SaveManager = loadstring(game:HttpGet(
-"https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"
-))()
-
-local InterfaceManager = loadstring(game:HttpGet(
-"https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"
-))()
-
-----------------------------------------------------------------
--- WINDOW
-----------------------------------------------------------------
 
 local Window = Fluent:CreateWindow({
 
@@ -66,14 +58,15 @@ local Tabs = {
 local Players =
     game:GetService("Players")
 
-local UIS =
-    game:GetService("UserInputService")
-
 local VIM =
-    game:GetService("VirtualInputManager")
+    game:GetService(
+        "VirtualInputManager"
+    )
 
 local RunService =
-    game:GetService("RunService")
+    game:GetService(
+        "RunService"
+    )
 
 local player =
     Players.LocalPlayer
@@ -87,13 +80,24 @@ local hrp =
         "HumanoidRootPart"
     )
 
-player.CharacterAdded:Connect(function(char)
+local humanoid =
+    character:WaitForChild(
+        "Humanoid"
+    )
+
+player.CharacterAdded:Connect(
+function(char)
 
     character = char
 
     hrp =
         character:WaitForChild(
             "HumanoidRootPart"
+        )
+
+    humanoid =
+        character:WaitForChild(
+            "Humanoid"
         )
 end)
 
@@ -104,16 +108,19 @@ end)
 local lagEnabled = false
 local lagIntensity = 500000
 local lagDuration = 0.3
-local isActive = false
+local lagRunning = false
 
 Tabs.Main:AddParagraph({
 
     Title = "FPS Lag",
 
-    Content = "Fake fps drop"
+    Content =
+        "Fake fps drop"
 })
 
-Tabs.Main:AddToggle("LagToggle", {
+Tabs.Main:AddToggle(
+"LagToggle",
+{
 
     Title = "Enable FPS Lag",
 
@@ -125,7 +132,9 @@ Tabs.Main:AddToggle("LagToggle", {
     end
 })
 
-Tabs.Main:AddSlider("LagPower", {
+Tabs.Main:AddSlider(
+"LagPower",
+{
 
     Title = "Lag Power",
 
@@ -143,7 +152,9 @@ Tabs.Main:AddSlider("LagPower", {
     end
 })
 
-Tabs.Main:AddSlider("LagDuration", {
+Tabs.Main:AddSlider(
+"LagDuration",
+{
 
     Title = "Lag Duration",
 
@@ -171,25 +182,28 @@ Tabs.Main:AddButton({
             return
         end
 
-        if isActive then
+        if lagRunning then
             return
         end
 
-        isActive = true
+        lagRunning = true
 
         task.spawn(function()
 
             local endTime =
-                tick() + lagDuration
+                tick()
+                + lagDuration
 
-            while tick() < endTime do
+            while tick()
+            < endTime do
 
                 for i = 1,
                     lagIntensity,
                     5000
                 do
 
-                    if tick() >= endTime then
+                    if tick()
+                    >= endTime then
                         break
                     end
 
@@ -210,100 +224,8 @@ Tabs.Main:AddButton({
                 task.wait()
             end
 
-            isActive = false
+            lagRunning = false
         end)
-    end
-})
-
-----------------------------------------------------------------
--- EDGE BOOST
-----------------------------------------------------------------
-
-local edgeEnabled = false
-local edgePower = 50
-local edgeConnection
-
-Tabs.Movement:AddParagraph({
-
-    Title = "Edge Boost",
-
-    Content = "Boost at edge"
-})
-
-Tabs.Movement:AddToggle("EdgeToggle", {
-
-    Title = "Enable Edge Boost",
-
-    Default = false,
-
-    Callback = function(v)
-
-        edgeEnabled = v
-
-        if edgeConnection then
-            edgeConnection:Disconnect()
-        end
-
-        if v then
-
-            edgeConnection =
-                RunService.Heartbeat:Connect(
-                function()
-
-                    if not hrp then
-                        return
-                    end
-
-                    local vel =
-                        hrp.AssemblyLinearVelocity
-
-                    if vel.Y < -1 then
-
-                        local parts =
-                            hrp:GetTouchingParts()
-
-                        for _, p in pairs(parts) do
-
-                            if p
-                            and p:IsA(
-                                "BasePart"
-                            )
-                            and not p:IsDescendantOf(
-                                character
-                            )
-                            then
-
-                                hrp.AssemblyLinearVelocity =
-                                    Vector3.new(
-                                        vel.X,
-                                        edgePower,
-                                        vel.Z
-                                    )
-
-                                break
-                            end
-                        end
-                    end
-                end)
-        end
-    end
-})
-
-Tabs.Movement:AddSlider("EdgePower", {
-
-    Title = "Edge Power",
-
-    Min = 50,
-
-    Max = 3000,
-
-    Default = 50,
-
-    Rounding = 0,
-
-    Callback = function(v)
-
-        edgePower = v
     end
 })
 
@@ -313,17 +235,17 @@ Tabs.Movement:AddSlider("EdgePower", {
 
 local macroEnabled = false
 
-local selectedPreset =
-    "G+1+CTRL"
-
-Tabs.Movement:AddParagraph({
+Tabs.Main:AddParagraph({
 
     Title = "Macro",
 
-    Content = "Macro presets"
+    Content =
+        "Spam G + Number + CTRL"
 })
 
-Tabs.Movement:AddToggle("MacroToggle", {
+Tabs.Main:AddToggle(
+"MacroToggle",
+{
 
     Title = "Enable Macro",
 
@@ -335,7 +257,12 @@ Tabs.Movement:AddToggle("MacroToggle", {
     end
 })
 
-Tabs.Movement:AddDropdown("MacroPreset", {
+local selectedPreset =
+    "G+1+CTRL"
+
+Tabs.Main:AddDropdown(
+"MacroPreset",
+{
 
     Title = "Preset",
 
@@ -359,7 +286,58 @@ Tabs.Movement:AddDropdown("MacroPreset", {
     end
 })
 
-Tabs.Movement:AddButton({
+local function pressThreeKeys(
+    key1,
+    key2,
+    key3
+)
+
+    VIM:SendKeyEvent(
+        true,
+        key1,
+        false,
+        game
+    )
+
+    VIM:SendKeyEvent(
+        true,
+        key2,
+        false,
+        game
+    )
+
+    VIM:SendKeyEvent(
+        true,
+        key3,
+        false,
+        game
+    )
+
+    task.wait(0.05)
+
+    VIM:SendKeyEvent(
+        false,
+        key1,
+        false,
+        game
+    )
+
+    VIM:SendKeyEvent(
+        false,
+        key2,
+        false,
+        game
+    )
+
+    VIM:SendKeyEvent(
+        false,
+        key3,
+        false,
+        game
+    )
+end
+
+Tabs.Main:AddButton({
 
     Title = "Run Macro",
 
@@ -369,127 +347,271 @@ Tabs.Movement:AddButton({
             return
         end
 
-        local presetMap = {
+        if selectedPreset
+        == "G+1+CTRL"
+        then
 
-            ["G+1+CTRL"] =
+            pressThreeKeys(
+                Enum.KeyCode.G,
                 Enum.KeyCode.One,
-
-            ["G+2+CTRL"] =
-                Enum.KeyCode.Two,
-
-            ["G+3+CTRL"] =
-                Enum.KeyCode.Three,
-
-            ["G+4+CTRL"] =
-                Enum.KeyCode.Four,
-
-            ["G+5+CTRL"] =
-                Enum.KeyCode.Five,
-
-            ["G+6+CTRL"] =
-                Enum.KeyCode.Six,
-        }
-
-        local numKey =
-            presetMap[selectedPreset]
-
-        if numKey then
-
-            VIM:SendKeyEvent(
-                true,
-                Enum.KeyCode.G,
-                false,
-                game
-            )
-
-            VIM:SendKeyEvent(
-                true,
-                numKey,
-                false,
-                game
-            )
-
-            VIM:SendKeyEvent(
-                true,
-                Enum.KeyCode.LeftControl,
-                false,
-                game
-            )
-
-            task.wait(0.05)
-
-            VIM:SendKeyEvent(
-                false,
-                Enum.KeyCode.G,
-                false,
-                game
-            )
-
-            VIM:SendKeyEvent(
-                false,
-                numKey,
-                false,
-                game
-            )
-
-            VIM:SendKeyEvent(
-                false,
-                Enum.KeyCode.LeftControl,
-                false,
-                game
+                Enum.KeyCode.LeftControl
             )
         end
     end
 })
 
 ----------------------------------------------------------------
--- CACTUS HITBOX
+-- MOVEMENT
 ----------------------------------------------------------------
 
-local cactusEnabled = false
-local cactusSize = 8
+local movement = {
+
+    edgeEnabled = false,
+
+    edgePower = 85,
+
+    betterBounceEnabled = false,
+
+    betterBouncePower = 14,
+}
 
 Tabs.Movement:AddParagraph({
 
-    Title = "Cactus",
+    Title = "Movement",
 
-    Content = "Expand cactus top"
+    Content =
+        "Edge + Better Bounce"
 })
 
-Tabs.Movement:AddToggle("CactusToggle", {
+Tabs.Movement:AddToggle(
+"EdgeToggle",
+{
 
-    Title = "Enable Cactus Hitbox",
+    Title = "Enable Edge Boost",
 
     Default = false,
 
     Callback = function(v)
 
-        cactusEnabled = v
+        movement.edgeEnabled = v
+    end
+})
+
+Tabs.Movement:AddSlider(
+"EdgePower",
+{
+
+    Title = "Edge Power",
+
+    Min = 50,
+
+    Max = 3000,
+
+    Default = 85,
+
+    Rounding = 0,
+
+    Callback = function(v)
+
+        movement.edgePower = v
+    end
+})
+
+Tabs.Movement:AddToggle(
+"BounceToggle",
+{
+
+    Title =
+        "Enable Better Bounce",
+
+    Default = false,
+
+    Callback = function(v)
+
+        movement
+        .betterBounceEnabled = v
+    end
+})
+
+Tabs.Movement:AddSlider(
+"BouncePower",
+{
+
+    Title =
+        "Better Bounce Power",
+
+    Min = 5,
+
+    Max = 40,
+
+    Default = 14,
+
+    Rounding = 1,
+
+    Callback = function(v)
+
+        movement
+        .betterBouncePower = v
+    end
+})
+
+----------------------------------------------------------------
+-- MOVEMENT LOOP
+----------------------------------------------------------------
+
+RunService.Heartbeat:Connect(
+function()
+
+    if not hrp then
+        return
+    end
+
+    local vel =
+        hrp.AssemblyLinearVelocity
+
+    if movement.edgeEnabled then
+
+        if vel.Y < -1 then
+
+            local parts =
+                hrp:GetTouchingParts()
+
+            for _, p in pairs(parts)
+            do
+
+                if p
+                and p:IsA(
+                    "BasePart"
+                )
+                and not p:IsDescendantOf(
+                    character
+                )
+                then
+
+                    hrp
+                    .AssemblyLinearVelocity =
+
+                        Vector3.new(
+
+                            vel.X,
+
+                            movement.edgePower,
+
+                            vel.Z
+                        )
+
+                    break
+                end
+            end
+        end
+    end
+
+    if movement
+    .betterBounceEnabled
+    then
+
+        if vel.Y < -10 then
+
+            local parts =
+                hrp:GetTouchingParts()
+
+            for _, p in pairs(parts)
+            do
+
+                if p
+                and p:IsA(
+                    "BasePart"
+                )
+                and not p:IsDescendantOf(
+                    character
+                )
+                then
+
+                    hrp
+                    .AssemblyLinearVelocity =
+
+                        Vector3.new(
+
+                            vel.X,
+
+                            movement
+                            .betterBouncePower,
+
+                            vel.Z
+                        )
+
+                    break
+                end
+            end
+        end
+    end
+end)
+
+----------------------------------------------------------------
+-- CACTUS PLATFORM
+----------------------------------------------------------------
+
+local cactusPlatformEnabled =
+    false
+
+local cactusPlatformSize = 12
+local cactusPlatformHeight = 3
+local cactusPlatformTransparency = 1
+
+Tabs.Movement:AddParagraph({
+
+    Title = "Cactus Platform",
+
+    Content =
+        "Invisible platform above cactus"
+})
+
+Tabs.Movement:AddToggle(
+"CactusPlatformToggle",
+{
+
+    Title =
+        "Enable Cactus Platform",
+
+    Default = false,
+
+    Callback = function(v)
+
+        cactusPlatformEnabled = v
 
         if v then
 
             task.spawn(function()
 
-                while cactusEnabled do
+                while
+                cactusPlatformEnabled
+                do
 
                     local folder =
-                    workspace.Game.Map.Parts.ImmovableProps
+                        workspace.Game.Map
+                        .Parts
+                        .ImmovableProps
 
                     for _, cactus in ipairs(
                         folder:GetChildren()
                     ) do
 
                         if string.find(
-                            cactus.Name:lower(),
+                            cactus.Name
+                            :lower(),
+
                             "cactus"
                         ) then
 
-                            local topPart = nil
+                            local highestPart =
+                                nil
+
                             local highestY =
                                 -math.huge
 
                             for _, obj in ipairs(
-                                cactus:GetDescendants()
+                                cactus
+                                :GetDescendants()
                             ) do
 
                                 if obj:IsA(
@@ -501,87 +623,190 @@ Tabs.Movement:AddToggle("CactusToggle", {
                                     then
 
                                         highestY =
-                                            obj.Position.Y
+                                            obj
+                                            .Position.Y
 
-                                        topPart =
+                                        highestPart =
                                             obj
                                     end
                                 end
                             end
 
-                            if topPart then
+                            if highestPart then
 
-                                pcall(function()
+                                local old =
+                                    cactus
+                                    :FindFirstChild(
+                                        "CutePlatform"
+                                    )
 
-                                    topPart.Size =
-                                        topPart.Size
-                                        + Vector3.new(
-                                            cactusSize,
-                                            cactusSize,
-                                            cactusSize
+                                if not old then
+
+                                    local part =
+                                        Instance.new(
+                                            "Part"
                                         )
 
-                                    topPart.CanCollide =
+                                    part.Name =
+                                        "CutePlatform"
+
+                                    part.Parent =
+                                        cactus
+
+                                    part.Anchored =
                                         true
 
-                                    topPart.Transparency =
-                                        0
+                                    part.CanCollide =
+                                        true
 
-                                    if not topPart:FindFirstChild(
-                                        "ESP"
-                                    ) then
+                                    part.Material =
+                                        Enum.Material
+                                        .SmoothPlastic
 
-                                        local box =
-                                            Instance.new(
-                                                "SelectionBox"
-                                            )
+                                    part.Transparency =
+                                        cactusPlatformTransparency
 
-                                        box.Name =
-                                            "ESP"
+                                    part.Size =
+                                        Vector3.new(
+                                            cactusPlatformSize,
+                                            1,
+                                            cactusPlatformSize
+                                        )
 
-                                        box.Parent =
-                                            topPart
+                                    part.CFrame =
 
-                                        box.Adornee =
-                                            topPart
+                                        highestPart
+                                        .CFrame
 
-                                        box.LineThickness =
-                                            0.05
-
-                                        box.Color3 =
-                                            Color3.fromRGB(
-                                                0,
-                                                255,
-                                                0
-                                            )
-                                    end
-                                end)
+                                        * CFrame.new(
+                                            0,
+                                            cactusPlatformHeight,
+                                            0
+                                        )
+                                end
                             end
                         end
                     end
 
-                    task.wait(3)
+                    task.wait(2)
                 end
             end)
+
+        else
+
+            local folder =
+                workspace.Game.Map
+                .Parts.ImmovableProps
+
+            for _, cactus in ipairs(
+                folder:GetChildren()
+            ) do
+
+                local old =
+                    cactus:FindFirstChild(
+                        "CutePlatform"
+                    )
+
+                if old then
+                    old:Destroy()
+                end
+
+                for _, v in ipairs(
+                    cactus:GetDescendants()
+                ) do
+
+                    if v:IsA(
+                        "SelectionBox"
+                    ) then
+
+                        v:Destroy()
+                    end
+                end
+            end
         end
     end
 })
 
-Tabs.Movement:AddSlider("CactusSize", {
+Tabs.Movement:AddSlider(
+"CactusPlatformSize",
+{
 
-    Title = "Cactus Size",
+    Title = "Platform Size",
 
     Min = 2,
 
-    Max = 20,
+    Max = 40,
 
-    Default = 8,
+    Default = 12,
 
     Rounding = 0,
 
     Callback = function(v)
 
-        cactusSize = v
+        cactusPlatformSize = v
+    end
+})
+
+Tabs.Movement:AddSlider(
+"CactusPlatformHeight",
+{
+
+    Title = "Platform Height",
+
+    Min = 0,
+
+    Max = 15,
+
+    Default = 3,
+
+    Rounding = 0,
+
+    Callback = function(v)
+
+        cactusPlatformHeight = v
+    end
+})
+
+Tabs.Movement:AddSlider(
+"CactusPlatformTransparency",
+{
+
+    Title =
+        "Platform Transparency",
+
+    Min = 0,
+
+    Max = 100,
+
+    Default = 100,
+
+    Rounding = 0,
+
+    Callback = function(v)
+
+        cactusPlatformTransparency =
+            v / 100
+
+        local folder =
+            workspace.Game.Map
+            .Parts.ImmovableProps
+
+        for _, cactus in ipairs(
+            folder:GetChildren()
+        ) do
+
+            local part =
+                cactus
+                :FindFirstChild(
+                    "CutePlatform"
+                )
+
+            if part then
+
+                part.Transparency =
+                    cactusPlatformTransparency
+            end
+        end
     end
 })
 
@@ -589,10 +814,9 @@ Tabs.Movement:AddSlider("CactusSize", {
 -- FOV
 ----------------------------------------------------------------
 
-local camera =
-    workspace.CurrentCamera
-
-Tabs.Misc:AddSlider("FOV", {
+Tabs.Misc:AddSlider(
+"FOVSlider",
+{
 
     Title = "FOV",
 
@@ -606,47 +830,21 @@ Tabs.Misc:AddSlider("FOV", {
 
     Callback = function(v)
 
-        if camera then
-            camera.FieldOfView = v
-        end
+        workspace.CurrentCamera
+        .FieldOfView = v
     end
 })
 
 ----------------------------------------------------------------
--- SAVE
+-- NOTIFY
 ----------------------------------------------------------------
-
-SaveManager:SetLibrary(Fluent)
-
-InterfaceManager:SetLibrary(Fluent)
-
-SaveManager:IgnoreThemeSettings()
-
-SaveManager:SetIgnoreIndexes({})
-
-InterfaceManager:SetFolder(
-    "CuteFemboyHub"
-)
-
-SaveManager:SetFolder(
-    "CuteFemboyHub/Evade"
-)
-
-InterfaceManager:BuildInterfaceSection(
-    Tabs.Settings
-)
-
-SaveManager:BuildConfigSection(
-    Tabs.Settings
-)
-
-Window:SelectTab(1)
 
 Fluent:Notify({
 
     Title = "Cute Femboy Hub",
 
-    Content = "Loaded Successfully 🌸",
+    Content =
+        "Loaded Successfully 🌸",
 
     Duration = 5
 })
